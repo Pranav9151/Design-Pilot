@@ -37,10 +37,10 @@ class Settings(BaseSettings):
 
     # ── Database ───────────────────────────────────────────────────
     DATABASE_URL: str = (
-        "postgresql+asyncpg://designpilot:designpilot@localhost:5432/designpilot_dev"
+        "postgresql+asyncpg://designpilot:designpilot@localhost:5433/designpilot_dev"
     )
     DATABASE_URL_SYNC: str = (
-        "postgresql://designpilot:designpilot@localhost:5432/designpilot_dev"
+        "postgresql://designpilot:designpilot@localhost:5433/designpilot_dev"
     )
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 5
@@ -55,7 +55,7 @@ class Settings(BaseSettings):
     SUPABASE_JWT_AUDIENCE: str = "authenticated"
 
     # ── Redis ──────────────────────────────────────────────────────
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_URL: str = "redis://localhost:6380/0"
 
     # ── LLM ────────────────────────────────────────────────────────
     ANTHROPIC_API_KEY: str = ""

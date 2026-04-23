@@ -9,8 +9,9 @@ from dataclasses import dataclass, field
 from typing import Dict, Tuple, Optional
 import math
 import json
-import tempfile
 import os
+
+from app.core.paths import make_tempdir
 
 
 @dataclass
@@ -71,7 +72,7 @@ class BracketGenerator:
         - Optional triangular gusset for reinforcement
         """
         if output_dir is None:
-            output_dir = tempfile.mkdtemp()
+            output_dir = str(make_tempdir(prefix="dpmech-bracket-"))
         
         p = params
         

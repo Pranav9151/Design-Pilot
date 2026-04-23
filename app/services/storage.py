@@ -34,6 +34,7 @@ from uuid import UUID
 import structlog
 
 from app.core.config import Settings, get_settings
+from app.core.paths import local_storage_root
 
 logger = structlog.get_logger(__name__)
 
@@ -102,8 +103,8 @@ class StorageService:
     ) -> DesignFilesLocation:
         """Upload STEP (+ optional GLB) for a design. Returns URLs to store in DB.
 
-        On missing R2 config (dev), writes to a local `/tmp/dpmech-local-r2/`
-        path and returns `file://` URLs. Production will fail loudly at
+        On missing R2 config (dev), writes to a repo-local runtime directory
+        and returns `file://` URLs. Production will fail loudly at
         startup if R2 is unset — see app.main.lifespan.
         """
         if not step_path.exists():
@@ -156,7 +157,7 @@ class StorageService:
         URL unchanged — the FastAPI app serves it via a /static mount.
         """
         if not self.is_configured:
-            return _local_fallback_url(key)
+            return self._local_fallback_url(key)
 
         import boto3  # lazy import so the module loads in dev without boto3
 
@@ -235,32 +236,31 @@ class StorageService:
         return url
 
     async def _upload_local(self, path: Path, key: str) -> str:
-        """Dev fallback — copy the file into <tempdir>/dpmech-local-r2/<key>.
-        Uses tempfile.gettempdir() for cross-platform compatibility (Windows/Linux/Mac).
-        """
-        if self._local_fallback_dir is None:
-            import tempfile
-            self._local_fallback_dir = Path(tempfile.gettempdir()) / "dpmech-local-r2"
-            self._local_fallback_dir.mkdir(parents=True, exist_ok=True)
-
-        dest = self._local_fallback_dir / key
+        """Dev fallback — copy the file into the repo-local runtime storage area."""
+        dest = self._ensure_local_fallback_dir() / key
         dest.parent.mkdir(parents=True, exist_ok=True)
 
         def _copy() -> None:
             shutil.copy2(path, dest)
 
         await asyncio.to_thread(_copy)
-        return _local_fallback_url(key)
+        return self._local_fallback_url(key)
 
     def _delete_local(self, key: str) -> int:
-        if self._local_fallback_dir is None:
-            import tempfile
-            self._local_fallback_dir = Path(tempfile.gettempdir()) / "dpmech-local-r2"
-        dest = self._local_fallback_dir / key
+        dest = self._ensure_local_fallback_dir() / key
         if dest.exists():
             dest.unlink()
             return 1
         return 0
+
+    def _ensure_local_fallback_dir(self) -> Path:
+        if self._local_fallback_dir is None:
+            self._local_fallback_dir = local_storage_root()
+        self._local_fallback_dir.mkdir(parents=True, exist_ok=True)
+        return self._local_fallback_dir
+
+    def _local_fallback_url(self, key: str) -> str:
+        return (self._ensure_local_fallback_dir() / key).as_uri()
 
 
 # ═════════════════════════════════════════════════════════════════════
@@ -274,9 +274,7 @@ def _design_key(design_id: UUID, kind: Literal["step", "glb"]) -> str:
 
 
 def _local_fallback_url(key: str) -> str:
-    import tempfile
-    base = Path(tempfile.gettempdir()) / "dpmech-local-r2"
-    return (base / key).as_uri()
+    return (local_storage_root() / key).as_uri()
 
 
 # Module-level lazy singleton

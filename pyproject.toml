@@ -83,6 +83,8 @@ python_classes = "Test*"
 python_functions = "test_*"
 addopts = [
     "-ra",
+    "-p",
+    "no:cacheprovider",
     "--strict-markers",
     "--strict-config",
     "--tb=short",

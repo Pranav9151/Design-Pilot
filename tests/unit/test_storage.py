@@ -169,13 +169,11 @@ async def test_upload_skips_missing_glb_silently(storage_local, sample_step_file
 
 async def test_presigned_url_in_local_mode(storage_local):
     url = await storage_local.presigned_url("designs/abc/part.step")
-    assert url == "file:///tmp/dpmech-local-r2/designs/abc/part.step"
+    assert url == (storage_local._local_fallback_dir / "designs/abc/part.step").as_uri()
 
 
 def test_local_fallback_url_shape():
-    assert _local_fallback_url("designs/x/part.step") == (
-        "file:///tmp/dpmech-local-r2/designs/x/part.step"
-    )
+    assert _local_fallback_url("designs/x/part.step").endswith("/designs/x/part.step")
 
 
 # ─────────────────────────────────────────────────────────────────────

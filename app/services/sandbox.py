@@ -32,7 +32,6 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
-import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -40,6 +39,7 @@ from typing import Any
 import structlog
 
 from app.core.config import Settings, get_settings
+from app.core.paths import make_tempdir, temporary_directory
 from app.services.ast_validator import ASTValidationError, ast_validator
 
 logger = structlog.get_logger(__name__)
@@ -255,7 +255,7 @@ class Sandbox:
             )
 
         # ── 4. Prepare host-side scratch dir ────────────────────────
-        with tempfile.TemporaryDirectory(prefix="dpmech-sandbox-") as host_work:
+        with temporary_directory(prefix="dpmech-sandbox-") as host_work:
             host_workdir = Path(host_work)
             # Ensure the bind-mount target is writable by the container's nobody
             host_workdir.chmod(0o777)
@@ -333,7 +333,7 @@ class Sandbox:
             # ── 5. Copy STEP/GLB out of the scratch dir ────────────
             # The tempdir is cleaned up when we exit this `with`, so we
             # move the files to a stable per-run location the caller owns.
-            persistent = Path(tempfile.mkdtemp(prefix="dpmech-out-"))
+            persistent = make_tempdir(prefix="dpmech-out-")
             step_src = host_workdir / "part.step"
             glb_src = host_workdir / "part.glb"
             step_dst = persistent / "part.step"
@@ -419,7 +419,7 @@ def _mock_sandbox_result(code: str, *, run_id: str | None = None) -> SandboxResu
     to produce realistic bounding-box metrics. The STEP content is a minimal
     valid stub that satisfies the output validator's volume > 0 check.
     """
-    import re, tempfile, math
+    import re
 
     # Extract geometry parameters from the emitted CadQuery code
     def _float(name: str, default: float) -> float:
@@ -436,7 +436,7 @@ def _mock_sandbox_result(code: str, *, run_id: str | None = None) -> SandboxResu
     volume_mm3 = base_w * base_d * base_t + base_w * wall_h * wall_t
 
     # Write a minimal ISO 10303-21 STEP stub
-    out_dir = Path(tempfile.mkdtemp(prefix="dpmech-mock-"))
+    out_dir = make_tempdir(prefix="dpmech-mock-")
     step_path = out_dir / "part.step"
     step_path.write_text(
         "ISO-10303-21;\n"

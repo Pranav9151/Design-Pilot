@@ -12,12 +12,18 @@ The TEST DB is configured via DATABASE_URL / DATABASE_URL_SYNC in .env.test.
 from __future__ import annotations
 
 import os
+import shutil
+import tempfile
 from collections.abc import AsyncIterator
 from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
 import pytest_asyncio
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+TEST_TEMP_ROOT = PROJECT_ROOT / ".runtime" / "test-system"
+TEST_TEMP_ROOT.mkdir(parents=True, exist_ok=True)
 
 # Force test env before any app imports pick up settings
 os.environ.setdefault("APP_ENV", "development")
@@ -33,15 +39,15 @@ os.environ.setdefault(
     "SUPABASE_JWT_SECRET", "test-secret-at-least-32-characters-long-xxxxx"
 )
 os.environ.setdefault("SECRET_KEY", "test-secret-at-least-32-characters-long-xxxxx")
+os.environ.setdefault("TMPDIR", str(TEST_TEMP_ROOT))
+os.environ.setdefault("TEMP", str(TEST_TEMP_ROOT))
+os.environ.setdefault("TMP", str(TEST_TEMP_ROOT))
+tempfile.tempdir = str(TEST_TEMP_ROOT)
 
 from sqlalchemy import text  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine  # noqa: E402
 
 from app.core.config import get_settings  # noqa: E402
-
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
 
 @pytest.fixture(scope="session")
 def apply_migrations():
@@ -71,6 +77,15 @@ def apply_migrations():
     print(f"\n[conftest] alembic upgrade head:\n{result.stdout}")
 
     yield
+
+
+@pytest.fixture
+def tmp_path():
+    """Workspace-local replacement for pytest's built-in tmp_path."""
+    path = TEST_TEMP_ROOT / f"case-{uuid4().hex}"
+    path.mkdir(parents=True, exist_ok=False)
+    yield path
+    shutil.rmtree(path, ignore_errors=True)
 
 
 @pytest_asyncio.fixture
