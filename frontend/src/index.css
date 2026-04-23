@@ -1,0 +1,3 @@
+/* Vite default reset kept minimal — actual styles in styles/globals.css */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }

@@ -1,0 +1,44 @@
+# ══════════════════════════════════════════════════════════════════════
+# DesignPilot MECH — local development services
+#
+# Usage:
+#   make db-up        — start Postgres + Redis
+#   make db-down      — stop services
+#   make db-reset     — wipe volumes and recreate from scratch
+# ══════════════════════════════════════════════════════════════════════
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: designpilot
+      POSTGRES_PASSWORD: designpilot
+      POSTGRES_DB: designpilot_dev
+      # Create test DB alongside dev DB
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U designpilot -d designpilot_dev"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  postgres_data:
+  redis_data:
