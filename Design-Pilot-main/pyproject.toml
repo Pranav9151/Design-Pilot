@@ -1,0 +1,112 @@
+[project]
+name = "designpilot-mech"
+version = "1.0.0-alpha.1"
+description = "DesignPilot MECH — AI-powered engineering design tool for mechanical design engineers"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+authors = [
+    { name = "Waqar", email = "waqar@designpilot.in" },
+]
+
+dependencies = [
+    # Web framework
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "python-multipart>=0.0.12",
+
+    # Data & validation
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+
+    # Database
+    "sqlalchemy[asyncio]>=2.0.35",
+    "asyncpg>=0.30.0",
+    "alembic>=1.14.0",
+    "psycopg2-binary>=2.9.10",  # Alembic migrations (sync)
+
+    # Auth & security
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "cryptography>=43.0.0",
+
+    # Rate limiting & caching
+    "slowapi>=0.1.9",
+    "redis>=5.2.0",
+
+    # LLM (wired in Week 3)
+    "anthropic>=0.40.0",
+
+    # Object storage (wired in Week 3)
+    "boto3>=1.35.0",
+
+    # CAD engines (POC integration)
+    # cadquery is installed via conda/apt in production;
+    # for dev we rely on the POC executing in sandbox.
+    # "cadquery>=2.4.0",  # install separately, see README
+
+    # Observability
+    "sentry-sdk[fastapi]>=2.18.0",
+    "structlog>=24.4.0",
+
+    # Misc
+    "httpx>=0.27.0",
+    "email-validator>=2.2.0",
+    "orjson>=3.10.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "httpx>=0.27.0",
+    "ruff>=0.7.0",
+    "mypy>=1.13.0",
+    "types-passlib",
+    "faker>=30.0.0",
+    "fakeredis>=2.26.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = [
+    "-ra",
+    "-p",
+    "no:cacheprovider",
+    "--strict-markers",
+    "--strict-config",
+    "--tb=short",
+]
+markers = [
+    "engineering: engineering formula accuracy tests (vs textbook)",
+    "security: security invariant tests (AST filter, sandbox, etc.)",
+    "integration: end-to-end tests requiring DB",
+    "slow: tests that take >1s",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "PIE", "RET", "SIM", "ERA"]
+ignore = ["E501"]  # line length handled by formatter
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+plugins = ["pydantic.mypy"]

@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    border-color: theme('colors.border.DEFAULT');
+  }
+
+  :root {
+    color-scheme: dark;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2A2D31; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3D4147; }
+
+  ::selection { background: rgba(59, 130, 246, 0.25); color: #E8EAED; }
+
+  :focus-visible { outline: 1px solid #3B82F6; outline-offset: 2px; }
+}
+
+@layer components {
+  .eng-number {
+    @apply font-mono text-amber tabular-nums;
+  }
+  .eng-number-safe {
+    @apply font-mono text-green tabular-nums;
+  }
+  .eng-number-neutral {
+    @apply font-mono text-text tabular-nums;
+  }
+
+  .panel {
+    @apply bg-bg-2 border border-border;
+  }
+  .panel-elevated {
+    @apply bg-bg-3 border border-border-strong shadow-panel;
+  }
+
+  /* label-xs uses raw CSS to avoid @apply with custom fontSize token */
+  .label-xs {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.625rem;
+    line-height: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #4D5260;
+  }
+
+  .divider {
+    @apply border-t border-border;
+  }
+}
+
+/* cmdk command palette overrides */
+[cmdk-root] {
+  background: #161719;
+  border: 1px solid #3D4147;
+  border-radius: 0;
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255,255,255,0.04);
+}
+[cmdk-input] {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #2A2D31;
+  border-radius: 0;
+  color: #E8EAED;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  padding: 16px;
+  outline: none;
+  width: 100%;
+}
+[cmdk-input]::placeholder { color: #4D5260; }
+[cmdk-item] {
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #8B9099;
+}
+[cmdk-item][aria-selected='true'] {
+  background: rgba(59, 130, 246, 0.1);
+  color: #E8EAED;
+}
+[cmdk-group-heading] {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4D5260;
+  padding: 8px 16px 4px;
+}
+
+.three-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+@keyframes progress-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.progress-shimmer {
+  background: linear-gradient(90deg, #1D4ED8 0%, #3B82F6 50%, #1D4ED8 100%);
+  background-size: 200% 100%;
+  animation: progress-shimmer 1.5s ease-in-out infinite;
+}
